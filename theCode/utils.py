@@ -217,7 +217,7 @@ def weights_init(m):
 def save_img_results(data_img, fake, epoch, image_dir):
     num = cfg.VIS_COUNT
     fake = fake[0:num]
-    drive_dir = '/content/drive/My Drive/images'
+    drive_dir = '/content/drive/My Drive/coco2Image'
     # data_img is changed to [0,1]
     if data_img is not None:
         data_img = data_img[0:num]
@@ -241,7 +241,7 @@ def save_model(netG, netD, optimG, optimD, epoch, model_dir, saveD=True, saveOpt
         'netD': netD.state_dict() if saveD else {},
         'optimD': optimD.state_dict() if saveOptim else {}}
     torch.save(checkpoint, "{}/checkpoint_{:04}.pth".format(model_dir, epoch))
-    torch.save(checkpoint, "{}/checkpoint_{:04}.pth".format('/content/drive/My Drive/resl', epoch))
+    torch.save(checkpoint, "{}/checkpoint_{:04}.pth".format('/content/drive/My Drive/coco2Model', epoch))
     print('Save G/D models')
 
     if max_to_keep is not None and max_to_keep > 0:

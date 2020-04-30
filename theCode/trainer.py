@@ -32,10 +32,12 @@ class GANTrainer(object):
             self.model_dir = os.path.join(output_dir, 'Model')
             self.image_dir = os.path.join(output_dir, 'Image')
             self.log_dir = os.path.join(output_dir, 'Log')
+            self.drive_log_dir = '/content/drive/My Drive/coco2Log'
             mkdir_p(self.model_dir)
             mkdir_p(self.image_dir)
             mkdir_p(self.log_dir)
             self.summary_writer = FileWriter(self.log_dir)
+            self.drive_summary_writer = FileWriter(self.drive_log_dir)
 
         self.max_epoch = cfg.TRAIN.MAX_EPOCH
         self.snapshot_interval = cfg.TRAIN.SNAPSHOT_INTERVAL
@@ -149,7 +151,10 @@ class GANTrainer(object):
         ####
 
         count = 0
+        drive_count = 0
         for epoch in range(startpoint+1, self.max_epoch):
+            print ('epoch : ', epoch, ' drive_count : ', drive_count)
+            epoch_start_time = time.time()
             print(epoch)
             start_t = time.time()
             start_t500 = time.time()
@@ -160,22 +165,24 @@ class GANTrainer(object):
                 discriminator_lr *= 0.5
                 for param_group in optimizerD.param_groups:
                     param_group['lr'] = discriminator_lr
+            
 
+            time_to_i = time.time()
             for i, data in enumerate(data_loader, 0):
-                if i >= 3360 :
-                    print ('Last Batches : ' , i)
-                if i < 10 :
-                    print ('first Batches : ' , i)
-                if i == 0 :
-                    print ('Startig! Batch ',i,'from total of 2070' )
-                if i % 10 == 0 and i!=0:
-                    end_t500 = time.time()
-                    print ('Batch Number : ' , i ,' |||||  Toatal Time : ' , (end_t500 - start_t500))
-                    start_t500 = time.time()
+                # if i >= 3360 :
+                #     print ('Last Batches : ' , i)
+                # if i < 10 :
+                #     print ('first Batches : ' , i)
+                # if i == 0 :
+                #     print ('Startig! Batch ',i,'from total of 2070' )
+                # if i % 10 == 0 and i!=0:
+                #     end_t500 = time.time()
+                #     print ('Batch Number : ' , i ,' |||||  Toatal Time : ' , (end_t500 - start_t500))
+                #     start_t500 = time.time()
                 ######################################################
                 # (1) Prepare training data
-                if i < 10 :
-                    print (" (1) Prepare training data for batch : " , i)
+                # if i < 10 :
+                #     print (" (1) Prepare training data for batch : " , i)
                 ######################################################
                 #print ("Prepare training data for batch : " , i)
                 real_img_cpu, bbox, label, txt_embedding = data
@@ -219,9 +226,9 @@ class GANTrainer(object):
                 label_one_hot = label_one_hot.scatter_(2, _labels, 1).float()
 
                 #######################################################
-                # (2) Generate fake images
-                if i < 10 :
-                    print ("(2)Generate fake images")
+                # # (2) Generate fake images
+                # if i < 10 :
+                #     print ("(2)Generate fake images")
                 ######################################################
                 
                 noise.data.normal_(0, 1)
@@ -237,9 +244,9 @@ class GANTrainer(object):
                 # _, fake_imgs, mu, logvar, _ = netG(txt_embedding, noise, transf_matrices_inv, label_one_hot)
 
                 ############################
-                # (3) Update D network
-                if i < 10 :
-                    print("(3) Update D network")
+                # # (3) Update D network
+                # if i < 10 :
+                #     print("(3) Update D network")
                 ###########################
                 netD.zero_grad()
 
@@ -258,35 +265,35 @@ class GANTrainer(object):
                 errD.backward(retain_graph=True)
                 optimizerD.step()
                 ############################
-                # (4) Update G network
-                if i < 10 :
-                    print ("(4) Update G network")
+                # # (4) Update G network
+                # if i < 10 :
+                #     print ("(4) Update G network")
                 ###########################
                 netG.zero_grad()
-                if i < 10 :
-                    print ("netG.zero_grad")
+                # if i < 10 :
+                #     print ("netG.zero_grad")
                 if cfg.STAGE == 1:
                     errG = compute_generator_loss(netD, fake_imgs,
                                                   real_labels, label_one_hot, transf_matrices, transf_matrices_inv,
                                                   mu, self.gpus)
                 elif cfg.STAGE == 2:
-                    if i < 10 :
-                        print ("cgf.STAGE = " , cfg.STAGE)
+                    # if i < 10 :
+                    #     print ("cgf.STAGE = " , cfg.STAGE)
                     errG = compute_generator_loss(netD, fake_imgs,real_labels, label_one_hot, transf_matrices_s2, transf_matrices_inv_s2,mu, self.gpus)
-                    if i < 10 :
-                        print("errG : ",errG)
+                    # if i < 10 :
+                    #     print("errG : ",errG)
                 kl_loss = KL_loss(mu, logvar)
-                if i < 10 :
-                    print ("kl_loss = " , kl_loss)
+                # if i < 10 :
+                #     print ("kl_loss = " , kl_loss)
                 errG_total = errG + kl_loss * cfg.TRAIN.COEFF.KL
-                if i < 10 :
-                    print (" errG_total = " , errG_total )
+                # if i < 10 :
+                #     print (" errG_total = " , errG_total )
                 errG_total.backward()
-                if i < 10 :
-                    print ("errG_total.backward() ")
+                # if i < 10 :
+                #     print ("errG_total.backward() ")
                 optimizerG.step()
-                if i < 10 :
-                    print ("optimizerG.step() " )
+                # if i < 10 :
+                #     print ("optimizerG.step() " )
 
                 #print (" i % 500 == 0 :  " , i % 500 == 0 )
                 end_t = time.time()
@@ -300,6 +307,21 @@ class GANTrainer(object):
                     summary_D_f = summary.scalar('D_loss_fake', errD_fake)
                     summary_G = summary.scalar('G_loss', errG.item())
                     summary_KL = summary.scalar('KL_loss', kl_loss.item())
+
+                    print('epoch     :  ', epoch)
+                    print('count     :  ', count)
+                    print('  i       :  ',   i  )
+                    print('Time to i : ' , time.time() - time_to_i)
+                    time_to_i = time.time()
+                    print('D_loss : ', errD.item())
+                    print('D_loss_real : ', errD_real)
+                    print('D_loss_wrong : ', errD_wrong)
+                    print('D_loss_fake : ', errD_fake)
+                    print('G_loss : ', errG.item())
+                    print('KL_loss : ', kl_loss.item())
+                    print('generator_lr : ', generator_lr)
+                    print('discriminator_lr : ', discriminator_lr)
+                    print('lr_decay_step : ', lr_decay_step)
 
                     self.summary_writer.add_summary(summary_D, count)
                     self.summary_writer.add_summary(summary_D_r, count)
@@ -325,7 +347,15 @@ class GANTrainer(object):
                         save_img_results(real_img_cpu, fake, epoch, self.image_dir)
                         if lr_fake is not None:
                             save_img_results(None, lr_fake, epoch, self.image_dir)
-            
+                if i % 100 == 0:
+                    drive_count += 1
+                    self.drive_summary_writer.add_summary(summary_D, drive_count)
+                    self.drive_summary_writer.add_summary(summary_D_r, drive_count)
+                    self.drive_summary_writer.add_summary(summary_D_w, drive_count)
+                    self.drive_summary_writer.add_summary(summary_D_f, drive_count)
+                    self.drive_summary_writer.add_summary(summary_G, drive_count)
+                    self.drive_summary_writer.add_summary(summary_KL, drive_count)
+
             #print (" with torch.no_grad(): "  )
             with torch.no_grad():
                 if cfg.STAGE == 1:
@@ -356,6 +386,10 @@ class GANTrainer(object):
             if epoch % self.snapshot_interval == 0:
                 save_model(netG, netD, optimizerG, optimizerD, epoch, self.model_dir)
                 
+            print("keyTime |||||||||||||||||||||||||||||||")
+            print("epoch_time : " , time.time() - epoch_start_time)
+            print("KeyTime |||||||||||||||||||||||||||||||")
+
         #
         save_model(netG, netD, optimizerG, optimizerD, epoch, self.model_dir)
         #
