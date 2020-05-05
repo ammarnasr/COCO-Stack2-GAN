@@ -84,6 +84,10 @@ class GANTrainer(object):
         netG = STAGE2_G(Stage1_G)
         netG.apply(weights_init)
         print(netG)
+        print("---------------------------------------------------------------------------------")
+        print("Current Working Directory : " os.getcwd())
+        print("cfg.NET_G : " cfg.NET_G)
+        print("---------------------------------------------------------------------------------")
         if cfg.NET_G != '':
             print("THIS THE CURRENT DIRECTORY : " , os.getcwd())
             state_dict = torch.load(cfg.NET_G, map_location=lambda storage, loc: storage)
