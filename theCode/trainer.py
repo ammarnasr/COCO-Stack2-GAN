@@ -85,8 +85,8 @@ class GANTrainer(object):
         netG.apply(weights_init)
         print(netG)
         print("---------------------------------------------------------------------------------")
-        print("Current Working Directory : " os.getcwd())
-        print("cfg.NET_G : " cfg.NET_G)
+        print("Current Working Directory : ",  os.getcwd())
+        print("cfg.NET_G : " , cfg.NET_G)
         print("---------------------------------------------------------------------------------")
         if cfg.NET_G != '':
             print("THIS THE CURRENT DIRECTORY : " , os.getcwd())
