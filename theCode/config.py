@@ -17,8 +17,8 @@ __C.GPU_ID = '0'
 __C.CUDA = True
 __C.WORKERS = 6
 
-__C.NET_G = '../../../models/checkpoint_0026.pth'
-__C.NET_D = '../../../models/checkpoint_0026.pth'
+__C.NET_G = '../../../models/checkpoint_0028.pth'
+__C.NET_D = '../../../models/checkpoint_0028.pth'
 __C.STAGE1_G = ''
 __C.DATA_DIR = ''
 __C.IMG_DIR = ''
